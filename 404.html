@@ -10,8 +10,7 @@
   <script>
     "use strict";
 
-    const INNER_ORIGIN = "https://inner.example";
-    const OUTER_ORIGIN = "https://outer.example";
+    const INNER_ORIGIN = "https://47.122.126.87:8080";
   </script>
 
   <style>
@@ -51,7 +50,7 @@
 
       function mirrorInnerUrl(innerHref) {
         const innerUrl = new URL(innerHref);
-        const outerUrl = new URL(OUTER_ORIGIN);
+        const outerUrl = new URL(window.location.origin);
         outerUrl.pathname = innerUrl.pathname;
         outerUrl.search = innerUrl.search;
         outerUrl.hash = innerUrl.hash;
