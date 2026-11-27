@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cross-origin iframe host</title>
+  <link rel="icon" href="data:,">
+
+  <!-- The inner site URL is defined here before all application logic. -->
+  <script>
+    "use strict";
+
+    const INNER_ORIGIN = "https://47.122.126.87:8080";
+  </script>
+
+  <style>
+    html, body {
+      margin: 0;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    iframe {
+      display: block;
+      width: 100%;
+      height: 100%;
+      border: 0;
+    }
+  </style>
+</head>
+<body>
+  <iframe
+    id="inner-frame"
+    title="Embedded inner site"
+  ></iframe>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const innerFrame = document.getElementById("inner-frame");
+
+      function buildInitialInnerUrl() {
+        const innerUrl = new URL(INNER_ORIGIN);
+        innerUrl.pathname = window.location.pathname;
+        innerUrl.search = window.location.search;
+        innerUrl.hash = window.location.hash;
+        return innerUrl;
+      }
+
+      function mirrorInnerUrl(innerHref) {
+        const innerUrl = new URL(innerHref);
+        const outerUrl = new URL(window.location.origin);
+        outerUrl.pathname = innerUrl.pathname;
+        outerUrl.search = innerUrl.search;
+        outerUrl.hash = innerUrl.hash;
+
+        window.history.replaceState(
+          null,
+          "",
+          outerUrl.pathname + outerUrl.search + outerUrl.hash
+        );
+      }
+
+      window.addEventListener("message", (event) => {
+        const { href, title } = event.data;
+        mirrorInnerUrl(href);
+        document.title = title;
+      });
+
+      innerFrame.src = buildInitialInnerUrl().href;
+    })();
+  </script>
+</body>
+</html>
