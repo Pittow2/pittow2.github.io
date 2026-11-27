@@ -11,7 +11,9 @@
 | 外层站 | `https://outer.example` |
 | 内层站 | `https://inner.example` |
 
-外层服务器对 `https://outer.example` 下所有路径返回同一份 `index.html`，在 `github.io` 上可以通过 `404.html` 实现。
+外层服务器需要对 `https://outer.example` 下所有路径返回同一份 HTML，在 `github.io` 上可以通过 `404.html` 实现。
+
+如果无法做到这一点，请不要执行本文档的 `2. 内层每个 HTML 的 head 代码`。
 
 URL 按 path、query、fragment 对应：
 
@@ -26,7 +28,7 @@ https://inner.example/xxx?q=1#part
 
 ## 2. 内层每个 HTML 的 head 代码
 
-以下代码用于向外层站同步 URL 和窗口标题：
+以下 `iframe.js` 代码用于向外层站同步 URL 和窗口标题：
 
 ```js
 (() => {
@@ -98,6 +100,8 @@ Content-Security-Policy: frame-ancestors https://outer.example
 
 同时移除会导致跨源嵌入失败的 `X-Frame-Options`。如果上游已有 CSP，保留原有策略，将 `frame-ancestors` 作为另一条策略添加；多条 CSP 会同时生效，因此上游不能再包含冲突的 `frame-ancestors`。
 
+如果内层站需要执行更多 iframe 嵌套，所有子页面全都要添加该 CSP 头。
+
 ### Caddy
 
 ```caddyfile
@@ -149,11 +153,13 @@ history.replaceState(null, "", mirroredOuterPath);
 document.title = title;
 ```
 
-这不会重载外层页面，不会请求外层服务器，也不会新增历史记录。
+这不会重载外层页面、请求外层服务器或新增历史记录。
 
 ## 5. 注意事项
 
 内层页面不得依赖 `window.top` 实现。
+
+如果内层页面需要在新窗口中跳转，请主动将源修改为 `outer.example`。
 
 ## 6. 部署方式（推荐 Github）
 
@@ -167,4 +173,6 @@ document.title = title;
 
 内层跳转时，外层不能强制收到新 URL 或标题。外层无法读取跨源新页面。只有新源页面自己执行上述 `postMessage`，外层才能收到。
 
-外层调用 `iframe` 时没有使用 `sandbox`，没有声明 `allow`。你可以编辑 `404.html` 修改这一点。
+外层调用 `iframe` 时没有使用 `sandbox`，没有声明 `allow`。你可以编辑 HTML 代码修改这一点。
+
+和普通部署一样，带宽瓶颈是内层站的服务器。Github 等静态托管站只负责加载一个 HTML。但如果用户到托管站的连接质量过于差，仍会导致启动时缓慢。
